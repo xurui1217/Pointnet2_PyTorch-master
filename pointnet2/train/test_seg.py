@@ -63,7 +63,7 @@ parser.add_argument(
     help="Batch norm momentum decay gamma [default: 0.5]"
 )
 parser.add_argument(
-    "-checkpoint", type=str, default=None, help="Checkpoint to start from"
+    "-checkpoint", type=str, default='/media/jcc/xr/xrhh/3D/program/Pointnet2_PyTorch-master/pointnet2/train/checkpoints/poitnet2_semseg_best.pth.tar', help="Checkpoint to start from"
 )
 parser.add_argument(
     "-epochs", type=int, default=200, help="Number of epochs to train for"
@@ -121,7 +121,8 @@ if __name__ == "__main__":
         start_epoch, best_loss = pt_utils.load_checkpoint(
             model, optimizer, filename=args.checkpoint.split(".")[0]
         )
-
+        print('start from epoch:',start_epoch)
+        print('best loss is:',best_loss)
         lr_scheduler = lr_sched.LambdaLR(
             optimizer, lr_lbmd, last_epoch=start_epoch
         )
@@ -145,6 +146,8 @@ if __name__ == "__main__":
         viz=viz
     )
 
+
+    '''
     trainer.train(
         0,
         start_epoch,
@@ -153,6 +156,14 @@ if __name__ == "__main__":
         test_loader,
         best_loss=best_loss
     )
+    '''
+
 
     if start_epoch == args.epochs:
         _ = trainer.eval_epoch(test_loader)
+
+    val_loss,eval_dict_test= trainer.eval_epoch(test_loader)
+    print('best_prec is:', best_prec)
+    print('val_loss is:',val_loss)
+    print('eval_dict_test is:',eval_dict_test)
+    #viz.update('val_test', it, res)

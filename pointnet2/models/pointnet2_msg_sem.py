@@ -13,8 +13,8 @@ def model_fn_decorator(criterion):
     def model_fn(model, data, epoch=0, eval=False):
         with torch.set_grad_enabled(not eval):
             inputs, labels = data
-            inputs = inputs.to('cuda', non_blocking=True)
-            labels = labels.to('cuda', non_blocking=True)
+            inputs = inputs.to('cuda')  #test1_torch.Size([2, 32, 6])
+            labels = labels.to('cuda')
 
             preds = model(inputs)
             loss = criterion(preds.view(labels.numel(), -1), labels.view(-1))
@@ -63,7 +63,8 @@ class Pointnet2MSG(nn.Module):
             )
         )
         c_out_0 = 32 + 64
-
+        #xyz=torch.Size([32, 1024, 3])
+        #features=
         c_in = c_out_0
         self.SA_modules.append(
             PointnetSAModuleMSG(
@@ -75,7 +76,8 @@ class Pointnet2MSG(nn.Module):
             )
         )
         c_out_1 = 128 + 128
-
+        #xyz=torch.Size([32, 256, 3])
+        #features=
         c_in = c_out_1
         self.SA_modules.append(
             PointnetSAModuleMSG(
@@ -87,7 +89,8 @@ class Pointnet2MSG(nn.Module):
             )
         )
         c_out_2 = 256 + 256
-
+        #xyz=torch.Size([32, 64, 3])
+        #features=
         c_in = c_out_2
         self.SA_modules.append(
             PointnetSAModuleMSG(
@@ -99,7 +102,8 @@ class Pointnet2MSG(nn.Module):
             )
         )
         c_out_3 = 512 + 512
-
+        #xyz=torch.Size([32, 16, 3])
+        #features=
         self.FP_modules = nn.ModuleList()
         self.FP_modules.append(
             PointnetFPModule(mlp=[256 + input_channels, 128, 128])
@@ -137,7 +141,7 @@ class Pointnet2MSG(nn.Module):
                 be formated as (x, y, z, features...)
         """
         xyz, features = self._break_up_pc(pointcloud)
-
+        #torch.Size([32, 4096, 3])    torch.Size([32, 6, 4096])
         l_xyz, l_features = [xyz], [features]
         for i in range(len(self.SA_modules)):
             li_xyz, li_features = self.SA_modules[i](l_xyz[i], l_features[i])
@@ -158,9 +162,10 @@ if __name__ == "__main__":
     import torch.optim as optim
     B = 2
     N = 32
-    inputs = torch.randn(B, N, 6).cuda()
+    inputs = torch.randn(B, N, 6).cuda()  #(2,32,6)
     labels = torch.from_numpy(np.random.randint(0, 3,
                                                 size=B * N)).view(B, N).cuda()
+    #(2,32)
     model = Pointnet2MSG(3, input_channels=3)
     model.cuda()
 
@@ -172,7 +177,7 @@ if __name__ == "__main__":
         optimizer.zero_grad()
         _, loss, _ = model_fn(model, (inputs, labels))
         loss.backward()
-        print(loss.data[0])
+        print(loss.item())
         optimizer.step()
 
     # with use_xyz=False
@@ -190,5 +195,5 @@ if __name__ == "__main__":
         optimizer.zero_grad()
         _, loss, _ = model_fn(model, (inputs, labels))
         loss.backward()
-        print(loss.data[0])
+        print(loss.item())
         optimizer.step()

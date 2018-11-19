@@ -113,7 +113,7 @@ if __name__ == "__main__":
     #dummy_input = torch.rand(32,2048,3)
     #dummy_output = torch.rand(32)
     model = Pointnet(input_channels=0, num_classes=40, use_xyz=True)
-    model = nn.DataParallel(model, device_ids=[0, 1])
+    #model = nn.DataParallel(model, device_ids=[0, 1])
     #用2块gpu加速训练过程
     model.cuda()
 

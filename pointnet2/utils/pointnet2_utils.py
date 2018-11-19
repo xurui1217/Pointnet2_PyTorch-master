@@ -49,12 +49,13 @@ class FurthestPointSampling(Function):
         B, N, _ = xyz.size()
 
         output = torch.cuda.IntTensor(B, npoint)  #test时 tensor([[ 0,  8],[ 0,  6]], dtype=torch.int32, device='cuda:0') 第0个点和第8个点距离最远(batch_0） 第0个点和第6个点距离最远(batch_1)
+        #seg-torch.Size([32, 1024])
         temp = torch.cuda.FloatTensor(B, N).fill_(1e10) #放点与点之间的距离，计算最远点
-
+        #seg-torch.Size([32, 4096])
         pointnet2.furthest_point_sampling_wrapper(
             B, N, npoint, xyz, temp, output
         )
-
+        #output-存放的是点云的idx，torch.Size([32, 1024])
         return output
 
     @staticmethod
@@ -256,7 +257,7 @@ class GroupingOperation(Function):
         _, C, N = features.size()
 
         output = torch.cuda.FloatTensor(B, C, nfeatures, nsample)  #test1(2,6,2,6)
-
+        #seg-torch.Size([32, 3, 1024, 16])
         pointnet2.group_points_wrapper(
             B, C, N, nfeatures, nsample, features, idx, output
         )
@@ -328,6 +329,7 @@ class BallQuery(Function):
         npoint = new_xyz.size(1) #512
         idx = torch.cuda.IntTensor(B, npoint, nsample).zero_()  #nsample_test=6  test2(2,2,3)
         #idx=test1（2,2,6),2个batch，每个batch两个点，每个点选出周围的6个点的idx绑在一起!
+        #seg-torch.Size([32, 1024, 16])每个点周围的16个点
         pointnet2.ball_query_wrapper(
             B, N, npoint, radius, nsample, new_xyz, xyz, idx
         )

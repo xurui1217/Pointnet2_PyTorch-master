@@ -724,7 +724,7 @@ class Trainer(object):
                 if v is not None:
                     eval_dict[k] = eval_dict.get(k, []) + [v]
         acc_all = total_acc / count
-        return total_loss / count, eval_dict
+        return total_loss / count, eval_dict,acc_all
 
     def train(
             self,
@@ -762,14 +762,13 @@ class Trainer(object):
                 tqdm.tqdm(total=eval_frequency, leave=False, desc='train') as pbar:
 
             for epoch in tbar:
+                #print('epoch is:',epoch)
                 for batch in train_loader:
                     res = self._train_it(it, batch)
                     it += 1
-                    
+                    tbar.refresh()
                     pbar.update()
                     pbar.set_postfix(dict(total_it=it))
-                    tbar.refresh()
-
                     if self.viz is not None:
                         self.viz.update('train', it, res)
 
@@ -777,13 +776,14 @@ class Trainer(object):
                         pbar.close()
 
                         if test_loader is not None:
-                            val_loss, res = self.eval_epoch(test_loader)
+                            val_loss, res, acc_all = self.eval_epoch(test_loader)
 
                             if self.viz is not None:
                                 self.viz.update('val', it, res)
 
                             is_best = val_loss < best_loss
                             best_loss = min(best_loss, val_loss)
+                            print('epoch is:{},val_loss is:{},acc is:{}'.format(epoch,val_loss,acc_all))
                             save_checkpoint(
                                 checkpoint_state(self.model, self.optimizer, val_loss, best_loss, epoch,it),
                                 is_best,

@@ -12,8 +12,8 @@ def _get_data_files(list_filename):
 
 def _load_data_file(name):
     f = h5py.File(name)
-    data = f['data'][:]
-    label = f['label'][:]
+    data = f['data'][:]  #<class 'tuple'>: (1000, 4096, 9)
+    label = f['label'][:]  #<class 'tuple'>: (1000, 4096)
     return data, label
 
 
@@ -43,18 +43,19 @@ class Indoor3DSemSeg(data.Dataset):
         all_files = _get_data_files(
             os.path.join(self.data_dir, "all_files.txt")
         )
+        #list['indoor3d_sem_seg_hdf5_data/ply_data_all_0.h5','indoor3d_sem_seg_hdf5_data/ply_data_all_1.h5'.....]
         room_filelist = _get_data_files(
             os.path.join(self.data_dir, "room_filelist.txt")
         )
-
+        #list['Area_1_conferenceRoom_1','Area_1_conferenceRoom_1'.....]
         data_batchlist, label_batchlist = [], []
         for f in all_files:
             d, l = _load_data_file(os.path.join(BASE_DIR, f))
             data_batchlist.append(d)
             label_batchlist.append(l)
 
-        data_batches = np.concatenate(data_batchlist, 0)
-        labels_batches = np.concatenate(label_batchlist, 0)
+        data_batches = np.concatenate(data_batchlist, 0)  #<class 'tuple'>: (23585, 4096, 9)
+        labels_batches = np.concatenate(label_batchlist, 0)  #<class 'tuple'>: (23585, 4096)
 
         test_area = 'Area_5'
         train_idxs, test_idxs = [], []
@@ -93,7 +94,7 @@ class Indoor3DSemSeg(data.Dataset):
 
 
 if __name__ == "__main__":
-    dset = Indoor3DSemSeg(16, "./", train=True)
+    dset = Indoor3DSemSeg(16, train=True)
     print(dset[0])
     print(len(dset))
     dloader = torch.utils.data.DataLoader(dset, batch_size=32, shuffle=True)

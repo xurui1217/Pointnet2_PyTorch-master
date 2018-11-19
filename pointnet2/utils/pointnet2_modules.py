@@ -36,12 +36,12 @@ class _PointnetSAModuleBase(nn.Module):
 
         new_features_list = []
 
-        xyz_flipped = xyz.transpose(1, 2).contiguous()
+        xyz_flipped = xyz.transpose(1, 2).contiguous()  #torch.Size([32, 3, 4096])
         new_xyz = pointnet2_utils.gather_operation(
             xyz_flipped,
             pointnet2_utils.furthest_point_sample(xyz, self.npoint)  #存放最大搜索idx（2,2)
         ).transpose(1, 2).contiguous() if self.npoint is not None else None  #把最大搜索idx的坐标放在new_xyz里（2,2,3),其他的点都不要了.
-
+        #seg-torch.Size([32, 1024, 3])
         for i in range(len(self.groupers)):
             new_features = self.groupers[i](
                 xyz, new_xyz, features
