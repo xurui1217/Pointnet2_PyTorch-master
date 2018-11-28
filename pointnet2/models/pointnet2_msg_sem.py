@@ -67,7 +67,8 @@ class Pointnet2MSG(nn.Module):
         #features=
         c_in = c_out_0
         self.SA_modules.append(
-            PointnetSAModuleMSG(
+
+            G(
                 npoint=256,
                 radii=[0.1, 0.2],
                 nsamples=[16, 32],
@@ -145,6 +146,7 @@ class Pointnet2MSG(nn.Module):
         l_xyz, l_features = [xyz], [features]
         for i in range(len(self.SA_modules)):
             li_xyz, li_features = self.SA_modules[i](l_xyz[i], l_features[i])
+
             l_xyz.append(li_xyz)
             l_features.append(li_features)
 

@@ -110,6 +110,7 @@ if __name__ == "__main__":
         num_workers=12,
         pin_memory=True
     )
+
     #dummy_input = torch.rand(32,2048,3)
     #dummy_output = torch.rand(32)
     model = Pointnet(input_channels=0, num_classes=40, use_xyz=True)
@@ -130,7 +131,7 @@ if __name__ == "__main__":
     bn_lbmd = lambda it: max(args.bn_momentum * args.bnm_decay**(int(it * args.batch_size / args.decay_step)), bnm_clip)
 
     if args.checkpoint is not None:
-        _,start_epoch, best_prec = pt_utils.load_checkpoint(
+        _,start_epoch, best_prec,best_loss = pt_utils.load_checkpoint(
             model, optimizer, filename=args.checkpoint.split(".")[0]
         )
         #best_prec其实就是val_loss而已，best_loss这里没有存进来
@@ -151,7 +152,7 @@ if __name__ == "__main__":
 
     viz = pt_utils.VisdomViz(port=args.visdom_port)
     viz.text(str(vars(args)))
-    viz.text('start test cls msg model')
+    #viz.text('start test cls msg model')
 
 
     trainer = pt_utils.Trainer(
@@ -175,8 +176,9 @@ if __name__ == "__main__":
     )
     '''
 
-    val_loss,eval_dict_test= trainer.eval_epoch(test_loader)
+    val_loss,eval_dict_test,acc_all= trainer.eval_epoch(test_loader)
     print('best_prec is:', best_prec)
     print('val_loss is:',val_loss)
-    print('eval_dict_test is:',eval_dict_test)
+    #print('eval_dict_test is:',eval_dict_test)
+    print('acc_all is:',acc_all)
     #viz.update('val_test', it, res)

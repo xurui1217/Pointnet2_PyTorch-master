@@ -2,9 +2,11 @@ import torch
 import torch.utils.data as data
 import numpy as np
 import os, sys, h5py, subprocess, shlex
-import sys
+from visdom import Visdom
 #BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 BASE_DIR='/media/jcc/xr/xrhh/3D/data'
+
+viz = Visdom(port=8097, server="http://localhost")
 
 def _get_data_files(list_filename):
     with open(list_filename) as f:
@@ -114,15 +116,41 @@ if __name__ == "__main__":
     train_set = ModelNet40Cls(4096, transforms=transforms)
     train_loader = torch.utils.data.DataLoader(
         train_set,
-        batch_size=32,
+        batch_size=16,
         shuffle=True,
-        num_workers=12,
+        num_workers=4,
         pin_memory=True
     )
+    viz = Visdom(port=8097, server="http://localhost",env='data')
+
+    i=0
     for batch in train_loader:
+        i+=1
+        #print('i is:',i)
         point,label=batch
-        print(point.size()) #32,2048,3
-        print(label.size()) #32,1
+        #print(point.size()) #16,2048,3
+        viz.scatter(
+            X=point[7],
+            Y=np.ones(2048),
+            opts=dict(
+                legend=[str(label[7])],
+                markersize=2,
+                xtickmin=0,
+                xtickmax=2,
+                xlabel='Arbitrary',
+                xtickvals=[0, 0.75, 1.6, 2],
+                ytickmin=0,
+                ytickmax=2,
+                ytickstep=0.5,
+                ztickmin=0,
+                ztickmax=1,
+                ztickstep=0.5,
+            )
+        )
+        #print(label.size()) #16,1
+        #print(label[7])
+        if i==10:
+            sys.exit()
 
 
 

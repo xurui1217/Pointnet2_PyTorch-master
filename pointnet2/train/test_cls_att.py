@@ -9,8 +9,10 @@ from torchvision import transforms
 import os
 import sys
 sys.path.append('/media/jcc/xr/xrhh/3D/program/Pointnet2_PyTorch-master/')
-from pointnet2.models import Pointnet2ClsMSG as Pointnet
-from pointnet2.models.pointnet2_msg_cls import model_fn_decorator
+#from pointnet2.models import Pointnet2ClsMSG as Pointnet
+from pointnet2.models import Pointnet2ClsMSG_att as Pointnet
+#from pointnet2.models.pointnet2_msg_cls import model_fn_decorator
+from pointnet2.models.pointnet2_msg_cls_att import model_fn_decorator
 from pointnet2.data import ModelNet40Cls
 import pointnet2.utils.pytorch_utils as pt_utils
 import pointnet2.data.data_utils as d_utils
@@ -59,7 +61,7 @@ def parse_args():
         help="Batch norm momentum decay gamma"
     )
     parser.add_argument(
-        "-checkpoint", type=str, default=None, help="Checkpoint to start from"
+        "-checkpoint", type=str, default='/media/jcc/xr/xrhh/3D/program/Pointnet2_PyTorch-master/pointnet2/train/checkpoints/pointnet2_cls_att_best.pth.tar', help="Checkpoint to start from"
     )
     parser.add_argument(
         "-epochs", type=int, default=200, help="Number of epochs to train for"
@@ -113,7 +115,7 @@ if __name__ == "__main__":
     #dummy_input = torch.rand(32,2048,3)
     #dummy_output = torch.rand(32)
     model = Pointnet(input_channels=0, num_classes=40, use_xyz=True)
-    model = nn.DataParallel(model, device_ids=[0, 1])
+    #model = nn.DataParallel(model, device_ids=[0, 1])
     #用2块gpu加速训练过程
     model.cuda()
 
@@ -130,10 +132,10 @@ if __name__ == "__main__":
     bn_lbmd = lambda it: max(args.bn_momentum * args.bnm_decay**(int(it * args.batch_size / args.decay_step)), bnm_clip)
 
     if args.checkpoint is not None:
-        start_epoch, best_loss = pt_utils.load_checkpoint(
+        _,start_epoch, best_prec, best_loss = pt_utils.load_checkpoint(
             model, optimizer, filename=args.checkpoint.split(".")[0]
         )
-
+        #best_prec其实就是val_loss而已，best_loss这里没有存进来
         lr_scheduler = lr_sched.LambdaLR(
             optimizer, lr_lambda=lr_lbmd, last_epoch=start_epoch
         )
@@ -146,24 +148,25 @@ if __name__ == "__main__":
 
         best_loss = 1e10
         start_epoch = 1
-
+    print('load model success!!!')
     model_fn = model_fn_decorator(nn.CrossEntropyLoss())
 
     viz = pt_utils.VisdomViz(port=args.visdom_port)
     viz.text(str(vars(args)))
+    #viz.text('start test cls msg model')
 
 
     trainer = pt_utils.Trainer(
         model,
         model_fn,
         optimizer,
-        checkpoint_name="/media/jcc/xr/xrhh/3D/program/Pointnet2_PyTorch-master/pointnet2/train/checkpoints/pointnet2_cls",
-        best_name="/media/jcc/xr/xrhh/3D/program/Pointnet2_PyTorch-master/pointnet2/train/checkpoints/pointnet2_cls_best",
+        checkpoint_name="/media/jcc/xr/xrhh/3D/program/Pointnet2_PyTorch-master/pointnet2/train/checkpoints/pointnet2_cls_att",
+        best_name="/media/jcc/xr/xrhh/3D/program/Pointnet2_PyTorch-master/pointnet2/train/checkpoints/pointnet2_cls_att_best",
         lr_scheduler=lr_scheduler,
         bnm_scheduler=bnm_scheduler,
         viz=viz
     )
-
+    '''
     trainer.train(
         0,
         start_epoch,
@@ -172,6 +175,12 @@ if __name__ == "__main__":
         test_loader,
         best_loss=best_loss
     )
+    '''
 
-    if start_epoch == args.epochs:
-        _ = trainer.eval_epoch(test_loader)
+    val_loss,eval_dict_test,acc_all= trainer.eval_epoch(test_loader)
+    print('best_prec is:', best_prec)
+    print('val_loss is:',val_loss)
+    #print('eval_dict_test is:',eval_dict_test)
+    print('acc_all is:',acc_all)
+    print('best_loss is:', best_loss)
+    #viz.update('val_test', it, res)

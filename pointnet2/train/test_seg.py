@@ -102,7 +102,7 @@ if __name__ == "__main__":
     )
 
     model = Pointnet(num_classes=13, input_channels=6, use_xyz=True)
-    model = nn.DataParallel(model, device_ids=[0, 1])
+    #model = nn.DataParallel(model, device_ids=[0, 1])
     model.cuda()
     optimizer = optim.Adam(
         model.parameters(), lr=args.lr, weight_decay=args.weight_decay
@@ -118,7 +118,8 @@ if __name__ == "__main__":
         best_prec = 0
         best_loss = 1e10
     else:
-        start_epoch, best_loss = pt_utils.load_checkpoint(
+        print(args.checkpoint.split(".")[0])
+        _,start_epoch, best_prec, best_loss = pt_utils.load_checkpoint(
             model, optimizer, filename=args.checkpoint.split(".")[0]
         )
         print('start from epoch:',start_epoch)
@@ -158,12 +159,10 @@ if __name__ == "__main__":
     )
     '''
 
-
-    if start_epoch == args.epochs:
-        _ = trainer.eval_epoch(test_loader)
-
-    val_loss,eval_dict_test= trainer.eval_epoch(test_loader)
+    val_loss,eval_dict_test,acc_all= trainer.eval_epoch(test_loader)
     print('best_prec is:', best_prec)
+    print('best_loss is:', best_loss)
     print('val_loss is:',val_loss)
     print('eval_dict_test is:',eval_dict_test)
+    print('acc_all is:',acc_all)
     #viz.update('val_test', it, res)

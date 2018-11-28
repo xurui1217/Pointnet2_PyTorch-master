@@ -402,7 +402,7 @@ def load_checkpoint(model=None, optimizer=None, filename='checkpoint'):
         checkpoint = torch.load(filename)
         epoch = checkpoint['epoch']
         it = checkpoint.get('it', 0.0)
-        #best_loss = checkpoint['best_loss']
+        best_loss = checkpoint['best_loss']
         best_prec = checkpoint['best_prec']
         if model is not None and checkpoint['model_state'] is not None:
             model.load_state_dict(checkpoint['model_state'])
@@ -412,7 +412,7 @@ def load_checkpoint(model=None, optimizer=None, filename='checkpoint'):
     else:
         print("==> Checkpoint '{}' not found".format(filename))
 
-    return it, epoch, best_prec
+    return it, epoch, best_prec, best_loss
 
 
 def variable_size_collate(pad_val=0, use_shared_memory=True):
@@ -784,6 +784,7 @@ class Trainer(object):
                             is_best = val_loss < best_loss
                             best_loss = min(best_loss, val_loss)
                             print('epoch is:{},val_loss is:{},acc is:{}'.format(epoch,val_loss,acc_all))
+                            #checkpoint_state(self.model, self.optimizer, val_loss, best_loss, epoch,it),
                             save_checkpoint(
                                 checkpoint_state(self.model, self.optimizer, val_loss, best_loss, epoch,it),
                                 is_best,

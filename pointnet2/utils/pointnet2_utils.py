@@ -383,13 +383,13 @@ class QueryAndGroup(nn.Module):
         """
         #radii=[0.1, 0.2, 0.4],
         idx = ball_query(self.radius, self.nsample, xyz, new_xyz)
-        #print('idx is:',idx[0][0:5]) #16,512,15  #test(2,2,6)
+        #print('idx is:',idx[0][0:5]) #test_cls:16,512,15
         xyz_trans = xyz.transpose(1, 2).contiguous() #(2,3,9)
         grouped_xyz = grouping_operation(
             xyz_trans, idx
         )  #(B, 3, npoint, nsample)  #test(2,3,2,6)把这6个点的坐标存储下来
         grouped_xyz -= new_xyz.transpose(1, 2).unsqueeze(-1)  #减去new_xyz等于每个点和自己的中心点之间的相对距离（2,3,2,6）
-
+        #torch.Size([16, 3, 512, 15])
         if features is not None:
             grouped_features = grouping_operation(features, idx)
             #test1(2,6,2,6)把这6个点的features拿出来准备特征提取   #test2(2,6+3,2,3)
